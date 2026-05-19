@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DeckVisibility {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
+enum CardDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ReviewResult {
+  AGAIN
+  GOOD
+}
+
+model User {
+  id             String         @id @default(uuid())
+  name           String
+  email          String         @unique
+  passwordHash   String
+  avatarUrl      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  decks          Deck[]
+  savedDecks     SavedDeck[]
+  cardProgresses CardProgress[]
+  reviewLogs     ReviewLog[]
+  refreshTokens  RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Deck {
+  id               String         @id @default(uuid())
+  ownerId          String
+  title            String
+  description      String?
+  visibility       DeckVisibility @default(PRIVATE)
+  isArchived       Boolean        @default(false)
+  forkedFromDeckId String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  cards          Card[]
+  savedBy        SavedDeck[]
+  tags           DeckTag[]
+  progress       CardProgress[]
+  reviewLogs     ReviewLog[]
+  forkedFromDeck Deck?          @relation("DeckForks", fields: [forkedFromDeckId], references: [id])
+  forks          Deck[]         @relation("DeckForks")
+
+  @@index([ownerId])
+  @@index([visibility])
+  @@index([forkedFromDeckId])
+  @@index([isArchived])
+}
+
+model Card {
+  id               String         @id @default(uuid())
+  deckId           String
+  front            String
+  back             String
+  explanation      String?
+  imageUrl         String?
+  imageAlt         String?
+  difficulty       CardDifficulty @default(MEDIUM)
+  position         Int            @default(0)
+  isArchived       Boolean        @default(false)
+  forkedFromCardId String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  deck           Deck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  progress       CardProgress[]
+  reviewLogs     ReviewLog[]
+  forkedFromCard Card?          @relation("CardForks", fields: [forkedFromCardId], references: [id])
+  forks          Card[]         @relation("CardForks")
+
+  @@index([deckId])
+  @@index([forkedFromCardId])
+  @@index([isArchived])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  decks DeckTag[]
+
+  @@unique([name])
+}
+
+model DeckTag {
+  deckId String
+  tagId  String
+
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([deckId, tagId])
+  @@index([tagId])
+}
+
+model SavedDeck {
+  id      String   @id @default(uuid())
+  userId  String
+  deckId  String
+  savedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deckId])
+  @@index([userId])
+  @@index([deckId])
+}
+
+model CardProgress {
+  id               String   @id @default(uuid())
+  userId           String
+  deckId           String
+  cardId           String
+  leitnerBox       Int      @default(1)
+  dueAt            DateTime @default(now())
+  lastReviewedAt   DateTime?
+  totalReviews     Int      @default(0)
+  correctReviews   Int      @default(0)
+  incorrectReviews Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, deckId])
+  @@index([dueAt])
+}
+
+model ReviewLog {
+  id          String       @id @default(uuid())
+  userId      String
+  deckId      String
+  cardId      String
+  result      ReviewResult
+  previousBox Int
+  nextBox     Int
+  reviewedAt  DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deckId])
+  @@index([cardId])
+  @@index([reviewedAt])
+}
