@@ -46,14 +46,17 @@ function toAuthUser(user: User): AuthPayload['user'] {
   };
 }
 
-async function generateSession(user: User): Promise<{ accessToken: string; refreshToken: string }> {
+async function generateSession(
+  user: User,
+  client: Prisma.TransactionClient = prisma,
+): Promise<{ accessToken: string; refreshToken: string }> {
   const jti = createTokenId();
   const accessToken = signAccessToken({ sub: user.id, email: user.email, name: user.name });
   const refreshToken = signRefreshToken({ sub: user.id, jti });
 
   const expiresAt = new Date(Date.now() + parseDurationToMs(process.env.REFRESH_TOKEN_EXPIRES_IN ?? '30d'));
 
-  await prisma.refreshToken.create({
+  await client.refreshToken.create({
     data: {
       userId: user.id,
       tokenHash: hashToken(refreshToken),
@@ -118,29 +121,41 @@ export async function refreshSession(refreshToken: string): Promise<AuthPayload>
   const payload = verifyRefreshToken(refreshToken);
   const tokenHash = hashToken(refreshToken);
 
-  const stored = await prisma.refreshToken.findFirst({
-    where: {
-      tokenHash,
-      userId: payload.sub,
-      revokedAt: null,
-      expiresAt: { gt: new Date() },
-    },
-    include: { user: true },
+  const { session, user } = await prisma.$transaction(async (tx) => {
+    const stored = await tx.refreshToken.findFirst({
+      where: {
+        tokenHash,
+        userId: payload.sub,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      include: { user: true },
+    });
+
+    if (!stored) {
+      throw new UnauthorizedError('Invalid refresh token', ERROR_CODES.TOKEN_INVALID);
+    }
+
+    const revoked = await tx.refreshToken.updateMany({
+      where: {
+        id: stored.id,
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    });
+
+    if (revoked.count !== 1) {
+      throw new UnauthorizedError('Invalid refresh token', ERROR_CODES.TOKEN_INVALID);
+    }
+
+    return {
+      session: await generateSession(stored.user, tx),
+      user: stored.user,
+    };
   });
-
-  if (!stored) {
-    throw new UnauthorizedError('Invalid refresh token', ERROR_CODES.TOKEN_INVALID);
-  }
-
-  await prisma.refreshToken.update({
-    where: { id: stored.id },
-    data: { revokedAt: new Date() },
-  });
-
-  const session = await generateSession(stored.user);
 
   return {
-    user: toAuthUser(stored.user),
+    user: toAuthUser(user),
     ...session,
   };
 }

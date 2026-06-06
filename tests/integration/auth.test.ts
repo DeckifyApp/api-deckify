@@ -79,6 +79,37 @@ describe('Auth endpoints', () => {
     expect(invalidOldToken.body.success).toBe(false);
   });
 
+  it('allows only one concurrent refresh rotation for the same token', async () => {
+    await request(app)
+      .post('/auth/register')
+      .send({
+        ...userPayload,
+        email: 'henrique-concurrent@example.com',
+      });
+
+    const login = await request(app).post('/auth/login').send({
+      email: 'henrique-concurrent@example.com',
+      password: userPayload.password,
+    });
+
+    const oldRefreshToken = login.body.data.refreshToken as string;
+
+    const responses = await Promise.all([
+      request(app).post('/auth/refresh').send({ refreshToken: oldRefreshToken }),
+      request(app).post('/auth/refresh').send({ refreshToken: oldRefreshToken }),
+    ]);
+
+    const statuses = responses.map((response) => response.status).sort();
+    expect(statuses).toEqual([200, 401]);
+
+    const refreshed = responses.find((response) => response.status === 200);
+    const rejected = responses.find((response) => response.status === 401);
+
+    expect(refreshed?.body.success).toBe(true);
+    expect(refreshed?.body.data.refreshToken).not.toBe(oldRefreshToken);
+    expect(rejected?.body.success).toBe(false);
+  });
+
   it('logs out and revokes refresh token', async () => {
     await request(app).post('/auth/register').send(userPayload);
 
