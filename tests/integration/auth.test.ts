@@ -132,4 +132,21 @@ describe('Auth endpoints', () => {
     expect(refreshAfterLogout.status).toBe(401);
     expect(refreshAfterLogout.body.success).toBe(false);
   });
+
+  it('deletes the account and all active sessions', async () => {
+    const registered = await request(app)
+      .post('/auth/register')
+      .send({
+        ...userPayload,
+        email: 'delete-me@example.com',
+      });
+    const { accessToken, refreshToken } = registered.body.data;
+
+    const deleted = await request(app).delete('/users/me').set('Authorization', `Bearer ${accessToken}`);
+    const refreshAfterDelete = await request(app).post('/auth/refresh').send({ refreshToken });
+
+    expect(deleted.status).toBe(200);
+    expect(deleted.body.data.deleted).toBe(true);
+    expect(refreshAfterDelete.status).toBe(401);
+  });
 });

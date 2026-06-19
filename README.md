@@ -3,6 +3,7 @@
 Backend API for Deckify, a mobile-first flashcard study app using a Leitner-based review system.
 
 This project implements:
+
 - JWT auth with refresh-token rotation
 - Deck/card CRUD with ownership and visibility rules
 - Community discovery, save, and fork workflows
@@ -26,6 +27,7 @@ This project implements:
 ## Project Structure
 
 src/
+
 - app.ts
 - server.ts
 - config/
@@ -47,11 +49,13 @@ src/
   - tags/
 
 prisma/
+
 - schema.prisma
 - migrations/
 - seed.ts
 
 tests/
+
 - integration/
 - helpers/
 
@@ -68,32 +72,33 @@ Required values:
 - JWT_REFRESH_SECRET=replace_me
 - ACCESS_TOKEN_EXPIRES_IN=15m
 - REFRESH_TOKEN_EXPIRES_IN=30d
-- CORS_ORIGIN=*
+- CORS_ORIGIN=\*
 
 The app validates env vars at startup and fails fast on invalid/missing values.
 
 ## Local Setup (without Docker)
 
-1) Install dependencies
+1. Install dependencies
 
 npm install
 
-2) Start PostgreSQL (locally)
+2. Start PostgreSQL (locally)
 
-3) Generate Prisma client
+3. Generate Prisma client
 
 npm run prisma:generate
 
-4) Start API
+4. Start API
 
 npm run dev
 
 On startup, the API will:
+
 - wait for PostgreSQL readiness (with retries)
 - create the target database if it does not exist
 - run `prisma migrate deploy` to create/update tables
 
-5) Seed data (optional)
+5. Seed data (optional)
 
 npm run prisma:seed
 
@@ -101,15 +106,16 @@ API runs at: http://localhost:3333
 
 ## Docker Setup
 
-1) Build and run API + PostgreSQL
+1. Build and run API + PostgreSQL
 
 docker compose up --build
 
-2) Open Swagger docs
+2. Open Swagger docs
 
 http://localhost:3333/docs
 
 Notes:
+
 - Compose overrides `DATABASE_URL` inside the API container to use the `postgres` service host.
 - On API startup, bootstrap will wait for DB readiness, ensure the database exists, and run migrations (`prisma migrate deploy`).
 
@@ -131,6 +137,7 @@ Run:
 npm run prisma:seed
 
 Seed includes:
+
 - 3 users
 - 5 decks with PRIVATE/PUBLIC/UNLISTED visibility
 - public decks with >=10 cards
@@ -150,6 +157,7 @@ Run watch mode:
 npm run test:watch
 
 Coverage focus includes:
+
 - Auth: register/login/refresh/logout
 - Deck authz and archive flows
 - Card authz and archive flows
@@ -174,6 +182,7 @@ Docs URL:
 http://localhost:3333/docs
 
 Includes:
+
 - auth, users, decks, cards, community, study endpoints
 - request/response payloads
 - bearer auth scheme for protected endpoints
@@ -181,9 +190,11 @@ Includes:
 ## API Overview
 
 Health
+
 - GET /health
 
 Auth
+
 - POST /auth/register
 - POST /auth/login
 - POST /auth/refresh
@@ -191,10 +202,13 @@ Auth
 - GET /auth/me
 
 Users
+
 - GET /users/me
 - PATCH /users/me
+- DELETE /users/me
 
 Decks
+
 - POST /decks
 - GET /decks
 - GET /decks/:deckId
@@ -202,6 +216,7 @@ Decks
 - DELETE /decks/:deckId (archives)
 
 Cards
+
 - POST /decks/:deckId/cards
 - GET /decks/:deckId/cards
 - GET /cards/:cardId
@@ -209,6 +224,7 @@ Cards
 - DELETE /cards/:cardId (archives)
 
 Community
+
 - GET /community/decks
 - GET /community/decks/:deckId
 - POST /community/decks/:deckId/save
@@ -216,6 +232,7 @@ Community
 - POST /community/decks/:deckId/fork
 
 Study
+
 - POST /study/decks/:deckId/start
 - GET /study/decks/:deckId/due
 - POST /study/cards/:cardId/review
@@ -233,6 +250,7 @@ Route -> Controller -> Service -> Prisma
 - Prisma: persistence and relational querying
 
 Key domain rules implemented:
+
 - Deck visibility: PRIVATE / PUBLIC / UNLISTED
 - Save vs Fork semantics
 - Object-level authorization checks
@@ -241,6 +259,7 @@ Key domain rules implemented:
 ## Security Notes
 
 Implemented:
+
 - Password hashing (bcrypt)
 - JWT access tokens
 - Hashed refresh tokens in DB
@@ -255,6 +274,7 @@ Implemented:
 ## MVP Limitations
 
 Not included in this MVP:
+
 - comments/ratings/following
 - notifications
 - AI generation
@@ -267,29 +287,29 @@ Not included in this MVP:
 Success:
 
 {
-  "success": true,
-  "data": {}
+"success": true,
+"data": {}
 }
 
 List:
 
 {
-  "success": true,
-  "data": [],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5
-  }
+"success": true,
+"data": [],
+"pagination": {
+"page": 1,
+"limit": 20,
+"total": 100,
+"totalPages": 5
+}
 }
 
 Error:
 
 {
-  "success": false,
-  "error": {
-    "code": "DECK_NOT_FOUND",
-    "message": "Deck not found"
-  }
+"success": false,
+"error": {
+"code": "DECK_NOT_FOUND",
+"message": "Deck not found"
+}
 }

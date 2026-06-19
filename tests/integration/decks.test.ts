@@ -39,13 +39,10 @@ describe('Deck endpoints', () => {
       password: 'StrongPassword123',
     });
 
-    const created = await request(app)
-      .post('/decks')
-      .set('Authorization', `Bearer ${owner.accessToken}`)
-      .send({
-        title: 'Public Deck',
-        visibility: 'PUBLIC',
-      });
+    const created = await request(app).post('/decks').set('Authorization', `Bearer ${owner.accessToken}`).send({
+      title: 'Public Deck',
+      visibility: 'PUBLIC',
+    });
 
     const deckId = created.body.data.id as string;
 
@@ -54,14 +51,44 @@ describe('Deck endpoints', () => {
       .set('Authorization', `Bearer ${saver.accessToken}`)
       .send();
 
-    const response = await request(app)
-      .get('/decks')
-      .set('Authorization', `Bearer ${saver.accessToken}`);
+    const response = await request(app).get('/decks').set('Authorization', `Bearer ${saver.accessToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     const saved = response.body.data.find((item: { id: string; isSaved: boolean }) => item.id === deckId);
     expect(saved?.isSaved).toBe(true);
+  });
+
+  it('removes saved access when the owner makes a deck private', async () => {
+    const owner = await registerAndLogin(app, {
+      name: 'Owner',
+      email: 'owner-private@example.com',
+      password: 'StrongPassword123',
+    });
+    const saver = await registerAndLogin(app, {
+      name: 'Saver',
+      email: 'saver-private@example.com',
+      password: 'StrongPassword123',
+    });
+    const created = await request(app)
+      .post('/decks')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send({ title: 'Public then private', visibility: 'PUBLIC' });
+    const deckId = created.body.data.id as string;
+
+    await request(app).post(`/community/decks/${deckId}/save`).set('Authorization', `Bearer ${saver.accessToken}`);
+    await request(app)
+      .patch(`/decks/${deckId}`)
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send({ visibility: 'PRIVATE' });
+
+    const library = await request(app).get('/decks').set('Authorization', `Bearer ${saver.accessToken}`);
+    const study = await request(app)
+      .post(`/study/decks/${deckId}/start`)
+      .set('Authorization', `Bearer ${saver.accessToken}`);
+
+    expect(library.body.data).toHaveLength(0);
+    expect(study.status).toBe(403);
   });
 
   it('updates own deck', async () => {
@@ -131,9 +158,7 @@ describe('Deck endpoints', () => {
 
     const deckId = created.body.data.id as string;
 
-    const response = await request(app)
-      .delete(`/decks/${deckId}`)
-      .set('Authorization', `Bearer ${owner.accessToken}`);
+    const response = await request(app).delete(`/decks/${deckId}`).set('Authorization', `Bearer ${owner.accessToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.data.archived).toBe(true);
@@ -159,9 +184,7 @@ describe('Deck endpoints', () => {
 
     const deckId = created.body.data.id as string;
 
-    const response = await request(app)
-      .get(`/decks/${deckId}`)
-      .set('Authorization', `Bearer ${other.accessToken}`);
+    const response = await request(app).get(`/decks/${deckId}`).set('Authorization', `Bearer ${other.accessToken}`);
 
     expect(response.status).toBe(403);
   });
@@ -186,9 +209,7 @@ describe('Deck endpoints', () => {
 
     const deckId = created.body.data.id as string;
 
-    const response = await request(app)
-      .get(`/decks/${deckId}`)
-      .set('Authorization', `Bearer ${other.accessToken}`);
+    const response = await request(app).get(`/decks/${deckId}`).set('Authorization', `Bearer ${other.accessToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.data.visibility).toBe('PUBLIC');

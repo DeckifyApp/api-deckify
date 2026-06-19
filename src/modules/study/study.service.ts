@@ -14,17 +14,9 @@ async function assertStudyDeckAccess(deckId: string, userId: string) {
   }
 
   const isOwner = deck.ownerId === userId;
-  const hasPublicAccess =
-    deck.visibility === DeckVisibility.PUBLIC || deck.visibility === DeckVisibility.UNLISTED;
-  const isSaved =
-    (await prisma.savedDeck.count({
-      where: {
-        userId,
-        deckId,
-      },
-    })) > 0;
+  const hasPublicAccess = deck.visibility === DeckVisibility.PUBLIC || deck.visibility === DeckVisibility.UNLISTED;
 
-  if (!isOwner && !hasPublicAccess && !isSaved) {
+  if (!isOwner && !hasPublicAccess) {
     throw new ForbiddenError('You cannot study this deck', ERROR_CODES.ACCESS_DENIED);
   }
 
@@ -180,13 +172,7 @@ export async function reviewCard(userId: string, cardId: string, result: ReviewR
 export async function getStudyStats(deckId: string, userId: string) {
   await assertStudyDeckAccess(deckId, userId);
 
-  const [
-    totalCards,
-    dueCards,
-    cardsByBoxRaw,
-    aggregate,
-    lastLog,
-  ] = await Promise.all([
+  const [totalCards, dueCards, cardsByBoxRaw, aggregate, lastLog] = await Promise.all([
     prisma.card.count({
       where: {
         deckId,

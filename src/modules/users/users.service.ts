@@ -47,3 +47,8 @@ export async function updateMe(
 
   return user;
 }
+
+export async function deleteMe(userId: string) {
+  await prisma.user.delete({ where: { id: userId } });
+  return { deleted: true };
+}

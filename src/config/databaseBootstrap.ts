@@ -73,6 +73,12 @@ async function ensureDatabaseExists(databaseUrl: string): Promise<void> {
   }
 }
 
+async function ensureDatabaseIsReachable(databaseUrl: string): Promise<void> {
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+  await client.end();
+}
+
 async function runMigrations(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -106,7 +112,11 @@ async function waitForDatabaseReady(
 
   for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
     try {
-      await ensureDatabaseExists(databaseUrl);
+      if (env.NODE_ENV === 'production') {
+        await ensureDatabaseIsReachable(databaseUrl);
+      } else {
+        await ensureDatabaseExists(databaseUrl);
+      }
       return;
     } catch (error) {
       lastError = error;

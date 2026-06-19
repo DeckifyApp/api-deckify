@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { UnauthorizedError } from '../../shared/errors/AppError';
 import { ok } from '../../shared/utils/http';
-import { getMe, updateMe } from './users.service';
+import { deleteMe, getMe, updateMe } from './users.service';
 
 export async function getMeController(req: Request, res: Response): Promise<void> {
   if (!req.user) {
@@ -24,4 +24,12 @@ export async function updateMeController(req: Request, res: Response): Promise<v
   });
 
   res.json(ok(user));
+}
+
+export async function deleteMeController(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new UnauthorizedError('Unauthorized');
+  }
+
+  res.json(ok(await deleteMe(req.user.id)));
 }

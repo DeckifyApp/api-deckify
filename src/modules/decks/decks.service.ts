@@ -130,6 +130,7 @@ export async function listLibraryDecks(userId: string) {
         userId,
         deck: {
           isArchived: false,
+          visibility: { not: DeckVisibility.PRIVATE },
         },
       },
       include: {

@@ -134,7 +134,9 @@ const swaggerDocument = {
           },
           409: {
             description: 'Email conflict',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } },
+            },
           },
         },
       },
@@ -255,6 +257,12 @@ const swaggerDocument = {
         },
         responses: { 200: { description: 'OK' } },
       },
+      delete: {
+        tags: ['Users'],
+        summary: 'Permanently delete the current account and its data',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Deleted' } },
+      },
     },
     '/decks': {
       get: {
@@ -285,14 +293,28 @@ const swaggerDocument = {
         tags: ['Decks'],
         summary: 'Get deck by id',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
       patch: {
         tags: ['Decks'],
         summary: 'Update own deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -307,7 +329,14 @@ const swaggerDocument = {
         tags: ['Decks'],
         summary: 'Archive own deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
     },
@@ -316,14 +345,28 @@ const swaggerDocument = {
         tags: ['Cards'],
         summary: 'List cards from accessible deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
       post: {
         tags: ['Cards'],
         summary: 'Create card in own deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -340,14 +383,28 @@ const swaggerDocument = {
         tags: ['Cards'],
         summary: 'Get accessible card by id',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'cardId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'cardId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
       patch: {
         tags: ['Cards'],
         summary: 'Update own card',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'cardId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'cardId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -362,7 +419,14 @@ const swaggerDocument = {
         tags: ['Cards'],
         summary: 'Archive own card',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'cardId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'cardId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
     },
@@ -386,7 +450,14 @@ const swaggerDocument = {
         tags: ['Community'],
         summary: 'Get community deck by id (public/unlisted)',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
     },
@@ -395,14 +466,28 @@ const swaggerDocument = {
         tags: ['Community'],
         summary: 'Save community deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 201: { description: 'Saved' } },
       },
       delete: {
         tags: ['Community'],
         summary: 'Unsave community deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'Unsaved' } },
       },
     },
@@ -411,7 +496,14 @@ const swaggerDocument = {
         tags: ['Community'],
         summary: 'Fork community deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 201: { description: 'Fork created' } },
       },
     },
@@ -420,7 +512,14 @@ const swaggerDocument = {
         tags: ['Study'],
         summary: 'Initialize study progress for deck cards',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
     },
@@ -430,7 +529,12 @@ const swaggerDocument = {
         summary: 'Get due cards for deck',
         security: [{ bearerAuth: [] }],
         parameters: [
-          { in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
           { in: 'query', name: 'limit', schema: { type: 'integer' } },
         ],
         responses: { 200: { description: 'OK' } },
@@ -441,7 +545,14 @@ const swaggerDocument = {
         tags: ['Study'],
         summary: 'Submit card review result',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'cardId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'cardId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -458,7 +569,14 @@ const swaggerDocument = {
         tags: ['Study'],
         summary: 'Get study stats for deck',
         security: [{ bearerAuth: [] }],
-        parameters: [{ in: 'path', name: 'deckId', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'deckId',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { 200: { description: 'OK' } },
       },
     },
