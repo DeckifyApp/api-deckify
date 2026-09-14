@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 import { env } from '../../config/env';
 import { UnauthorizedError } from '../errors/AppError';
 import { ERROR_CODES } from '../errors/errorCodes';
@@ -14,6 +15,17 @@ export interface RefreshTokenPayload {
   sub: string;
   jti: string;
 }
+
+const accessTokenPayloadSchema = z.object({
+  sub: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1).max(120),
+});
+
+const refreshTokenPayloadSchema = z.object({
+  sub: z.string().uuid(),
+  jti: z.string().uuid(),
+});
 
 function parseDurationToSeconds(duration: string): number {
   const match = duration.trim().match(/^(\d+)([smhd])$/i);
@@ -32,19 +44,23 @@ function parseDurationToSeconds(duration: string): number {
 
 export function signAccessToken(payload: AccessTokenPayload): string {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    algorithm: 'HS256',
     expiresIn: parseDurationToSeconds(env.ACCESS_TOKEN_EXPIRES_IN),
   });
 }
 
 export function signRefreshToken(payload: RefreshTokenPayload): string {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+    algorithm: 'HS256',
     expiresIn: parseDurationToSeconds(env.REFRESH_TOKEN_EXPIRES_IN),
   });
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
   try {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload;
+    return accessTokenPayloadSchema.parse(
+      jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }),
+    );
   } catch {
     throw new UnauthorizedError('Invalid access token', ERROR_CODES.TOKEN_INVALID);
   }
@@ -52,7 +68,9 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
   try {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET) as RefreshTokenPayload;
+    return refreshTokenPayloadSchema.parse(
+      jwt.verify(token, env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }),
+    );
   } catch {
     throw new UnauthorizedError('Invalid refresh token', ERROR_CODES.TOKEN_INVALID);
   }

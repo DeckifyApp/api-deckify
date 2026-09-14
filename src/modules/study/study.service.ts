@@ -68,6 +68,7 @@ export async function startStudySession(deckId: string, userId: string) {
 
 export async function getDueCards(deckId: string, userId: string, limit = 20) {
   await assertStudyDeckAccess(deckId, userId);
+  const safeLimit = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
 
   const cards = await prisma.cardProgress.findMany({
     where: {
@@ -82,7 +83,7 @@ export async function getDueCards(deckId: string, userId: string, limit = 20) {
       card: true,
     },
     orderBy: [{ dueAt: 'asc' }, { updatedAt: 'asc' }],
-    take: limit,
+    take: safeLimit,
   });
 
   return cards.map((item) => ({

@@ -1,4 +1,5 @@
 import { Prisma, type User } from '@prisma/client';
+import { env } from '../../config/env';
 import { prisma } from '../../config/prisma';
 import { ConflictError, UnauthorizedError } from '../../shared/errors/AppError';
 import { ERROR_CODES } from '../../shared/errors/errorCodes';
@@ -54,7 +55,7 @@ async function generateSession(
   const accessToken = signAccessToken({ sub: user.id, email: user.email, name: user.name });
   const refreshToken = signRefreshToken({ sub: user.id, jti });
 
-  const expiresAt = new Date(Date.now() + parseDurationToMs(process.env.REFRESH_TOKEN_EXPIRES_IN ?? '30d'));
+  const expiresAt = new Date(Date.now() + parseDurationToMs(env.REFRESH_TOKEN_EXPIRES_IN));
 
   await client.refreshToken.create({
     data: {

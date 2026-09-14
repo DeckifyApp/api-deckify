@@ -11,8 +11,13 @@ export interface PaginationMeta {
 }
 
 export function getPagination(input: PaginationInput): { skip: number; take: number; page: number; limit: number } {
-  const page = input.page && input.page > 0 ? input.page : 1;
-  const limit = input.limit && input.limit > 0 ? Math.min(input.limit, 100) : 20;
+  const pageInput = input.page;
+  const limitInput = input.limit;
+  const page = typeof pageInput === 'number' && Number.isSafeInteger(pageInput) && pageInput > 0 ? pageInput : 1;
+  const limit =
+    typeof limitInput === 'number' && Number.isSafeInteger(limitInput) && limitInput > 0
+      ? Math.min(limitInput, 100)
+      : 20;
 
   return {
     skip: (page - 1) * limit,

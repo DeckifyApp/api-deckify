@@ -44,7 +44,7 @@ async function replaceDeckTags(tx: Prisma.TransactionClient, deckId: string, tag
 
 export async function assertDeckOwner(deckId: string, userId: string): Promise<void> {
   const deck = await ensureDeckExists(deckId);
-  if (deck.ownerId != userId) {
+  if (deck.ownerId !== userId) {
     throw new ForbiddenError('You do not own this deck', ERROR_CODES.ACCESS_DENIED);
   }
 }

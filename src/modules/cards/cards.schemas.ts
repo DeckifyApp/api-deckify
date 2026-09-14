@@ -1,5 +1,6 @@
 import { CardDifficulty } from '@prisma/client';
 import { z } from 'zod';
+import { isHttpUrl } from '../../shared/utils/urls';
 
 export const deckIdParamSchema = z.object({
   params: z.object({
@@ -26,7 +27,13 @@ export const createCardSchema = z.object({
     front: z.string().trim().min(1).max(5000),
     back: z.string().trim().min(1).max(5000),
     explanation: z.string().trim().max(5000).nullable().optional(),
-    imageUrl: z.string().url().nullable().optional(),
+    imageUrl: z
+      .string()
+      .url()
+      .max(2000)
+      .refine(isHttpUrl, 'URL must use HTTP or HTTPS without embedded credentials')
+      .nullable()
+      .optional(),
     imageAlt: z.string().trim().max(255).nullable().optional(),
     difficulty: z.nativeEnum(CardDifficulty).default(CardDifficulty.MEDIUM),
     position: z.number().int().nonnegative().default(0),
@@ -43,7 +50,13 @@ export const updateCardSchema = z.object({
       front: z.string().trim().min(1).max(5000).optional(),
       back: z.string().trim().min(1).max(5000).optional(),
       explanation: z.string().trim().max(5000).nullable().optional(),
-      imageUrl: z.string().url().nullable().optional(),
+      imageUrl: z
+        .string()
+        .url()
+        .max(2000)
+        .refine(isHttpUrl, 'URL must use HTTP or HTTPS without embedded credentials')
+        .nullable()
+        .optional(),
       imageAlt: z.string().trim().max(255).nullable().optional(),
       difficulty: z.nativeEnum(CardDifficulty).optional(),
       position: z.number().int().nonnegative().optional(),

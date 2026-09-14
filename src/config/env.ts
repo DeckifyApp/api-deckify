@@ -17,6 +17,37 @@ const envSchema = z
     CORS_ORIGIN: z.string().default('*'),
   })
   .superRefine((value, context) => {
+    const addCorsIssue = (message: string) =>
+      context.addIssue({
+        code: 'custom',
+        message,
+        path: ['CORS_ORIGIN'],
+      });
+
+    const origins = value.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+
+    for (const origin of origins) {
+      if (origin === '*') {
+        if (value.NODE_ENV === 'production') {
+          addCorsIssue('Production must allow only explicitly configured HTTPS origins');
+        }
+        continue;
+      }
+
+      try {
+        const parsedOrigin = new URL(origin);
+        const validProtocol = parsedOrigin.protocol === 'http:' || parsedOrigin.protocol === 'https:';
+        const isOriginOnly =
+          parsedOrigin.pathname === '/' && !parsedOrigin.search && !parsedOrigin.hash && !parsedOrigin.username && !parsedOrigin.password;
+
+        if (!validProtocol || !isOriginOnly || (value.NODE_ENV === 'production' && parsedOrigin.protocol !== 'https:')) {
+          addCorsIssue('CORS origins must be origin-only HTTP(S) URLs; production origins must use HTTPS');
+        }
+      } catch {
+        addCorsIssue('CORS_ORIGIN contains an invalid origin');
+      }
+    }
+
     if (value.NODE_ENV !== 'production') return;
 
     for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'] as const) {
@@ -35,6 +66,19 @@ const envSchema = z
         message: 'Access and refresh secrets must be different',
         path: ['JWT_REFRESH_SECRET'],
       });
+    }
+
+    try {
+      const databaseUrl = new URL(value.DATABASE_URL);
+      if (databaseUrl.password === 'deckify' || databaseUrl.password === 'replace_me') {
+        context.addIssue({
+          code: 'custom',
+          message: 'Production database credentials must not use development defaults',
+          path: ['DATABASE_URL'],
+        });
+      }
+    } catch {
+      // DATABASE_URL is already required to be non-empty; Prisma validates its full format.
     }
   });
 

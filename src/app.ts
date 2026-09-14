@@ -11,9 +11,11 @@ import { studyRoutes } from './modules/study/study.routes';
 import { tagsRoutes } from './modules/tags/tags.routes';
 import { usersRoutes } from './modules/users/users.routes';
 import { errorHandler, notFoundHandler } from './shared/middleware/error.middleware';
+import { apiRateLimiter } from './shared/middleware/rateLimit.middleware';
 
 export const app = express();
 
+app.disable('x-powered-by');
 app.use(helmet());
 
 app.use(
@@ -22,8 +24,8 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(apiRateLimiter);
+app.use(express.json({ limit: '256kb' }));
 
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } });
@@ -37,7 +39,9 @@ app.use('/community', communityRoutes);
 app.use('/study', studyRoutes);
 app.use('/tags', tagsRoutes);
 
-setupSwagger(app);
+if (env.NODE_ENV !== 'production') {
+  setupSwagger(app);
+}
 
 app.use(notFoundHandler);
 app.use(errorHandler);

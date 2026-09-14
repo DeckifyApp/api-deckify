@@ -1,18 +1,20 @@
-FROM node:22-alpine AS build
+FROM node:22-alpine AS base
+
+RUN apk add --no-cache openssl && npm install --global npm@12.0.2
+
+FROM base AS build
 
 WORKDIR /app
-RUN apk add --no-cache openssl
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
 RUN npx prisma generate && npm run build
 
-FROM node:22-alpine
+FROM base
 
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache openssl
 COPY package*.json ./
 COPY prisma ./prisma
 RUN npm ci --omit=dev && npx prisma generate
